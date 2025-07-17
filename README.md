@@ -65,6 +65,8 @@ The `OffsetRange` interface represents a selection within a stream marked by two
 
 The `TextWriter` supports tracking the lines and columns of a Unicode document. It acts as a standard `io.Writer` with getter functions for the current offsets, but offers several additional functions which may be more useful to lower-level tokenizer/scanner-type implementations.
 
+* `WriteForOffset` will write a slice of bytes and return a `TextOffset`.
+* `WriteForOffsetRange` will write a slice of bytes and return their `TextOffsetRange`.
 * `WriteRunesForOffset` will write a slice of runes and return a `TextOffset`.
 * `WriteRunesForOffsetRange` will write a slice of runes and return their `TextOffsetRange`.
 
@@ -75,7 +77,7 @@ In code, use `NewTextWriter` to create an instance with an initial offset and be
 
 ```go
 w := cursorio.NewTextWriter(cursorio.TextOffset{})
-_ = w.WriteRunesForOffsetRange([]rune{0x1f477, 0x1f3fc})
+_ = w.WriteForOffsetRange([]byte([]rune{0x1f477, 0x1f3fc}))
 // cursorio.TextOffsetRange{
 //   From:cursorio.TextOffset{Byte:0, LineColumn:cursorio.TextLineColumn{0, 0}},
 //   Until:cursorio.TextOffset{Byte:8, LineColumn:cursorio.TextLineColumn{0, 1}},

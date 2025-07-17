@@ -22,7 +22,7 @@ func main() {
 	var trailing []cursorio.TextOffsetRange
 
 	for {
-		r, _, err := reader.ReadRune()
+		r, rs, err := reader.ReadRune()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
@@ -42,7 +42,7 @@ func main() {
 		all.Write([]byte(string(r)))
 		fmt.Fprintf(os.Stdout, "%s\n", all.String())
 
-		pos := cursor.WriteRunesForOffsetRange([]rune{r})
+		pos := cursor.WriteRunesForOffsetRange([]rune{r}, rs)
 		fmt.Fprintf(os.Stdout,
 			"%s^ byte-offset %d; byte-count %d; text-range %s\n",
 			strings.Repeat(" ", int(pos.From.LineColumn[1])),

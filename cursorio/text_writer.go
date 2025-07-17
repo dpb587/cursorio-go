@@ -36,20 +36,22 @@ func (w *TextWriter) GetTextOffset() TextOffset {
 	return w.offset
 }
 
-func (w *TextWriter) WriteRunes(p []rune) (int, error) {
-	return w.Write([]byte(string(p)))
+func (w *TextWriter) WriteRunes(p []rune, size int) (int, error) {
+	w.write([]byte(string(p)), size, false)
+
+	return size, nil
 }
 
-func (w *TextWriter) WriteRunesForOffset(p []rune) TextOffset {
-	w.write([]byte(string(p)), false)
+func (w *TextWriter) WriteRunesForOffset(p []rune, size int) TextOffset {
+	w.write([]byte(string(p)), size, false)
 
 	return w.offset
 }
 
-func (w *TextWriter) WriteRunesForOffsetRange(p []rune) TextOffsetRange {
+func (w *TextWriter) WriteRunesForOffsetRange(p []rune, size int) TextOffsetRange {
 	from := w.offset
 
-	w.write([]byte(string(p)), false)
+	w.write([]byte(string(p)), size, false)
 
 	return TextOffsetRange{
 		From:  from,
@@ -58,7 +60,7 @@ func (w *TextWriter) WriteRunesForOffsetRange(p []rune) TextOffsetRange {
 }
 
 func (w *TextWriter) WriteForOffset(p []byte) TextOffset {
-	w.write(p, false)
+	w.write(p, len(p), false)
 
 	return w.offset
 }
@@ -66,7 +68,7 @@ func (w *TextWriter) WriteForOffset(p []byte) TextOffset {
 func (w *TextWriter) WriteForOffsetRange(p []byte) TextOffsetRange {
 	from := w.offset
 
-	w.write(p, false)
+	w.write(p, len(p), false)
 
 	return TextOffsetRange{
 		From:  from,
@@ -75,7 +77,7 @@ func (w *TextWriter) WriteForOffsetRange(p []byte) TextOffsetRange {
 }
 
 func (w *TextWriter) Write(p []byte) (int, error) {
-	w.write(p, false)
+	w.write(p, len(p), false)
 
 	return len(p), nil
 }
@@ -85,10 +87,10 @@ func (w *TextWriter) WriteEOF() {
 		return
 	}
 
-	w.write(nil, true)
+	w.write(nil, 0, true)
 }
 
-func (w *TextWriter) write(p []byte, atEOF bool) {
+func (w *TextWriter) write(p []byte, psize int, atEOF bool) {
 	if len(w.buf) > 0 {
 		p = append(w.buf, p...)
 
@@ -99,7 +101,6 @@ func (w *TextWriter) write(p []byte, atEOF bool) {
 
 	for len(p) > 0 {
 		if p[0] == '\n' {
-			w.offset.Byte++
 			w.offset.LineColumn[0]++
 			w.offset.LineColumn[1] = 0
 
@@ -108,7 +109,6 @@ func (w *TextWriter) write(p []byte, atEOF bool) {
 			continue
 		} else if p[0] == '\r' {
 			if len(p) > 1 && p[1] == '\n' {
-				w.offset.Byte += 2
 				w.offset.LineColumn[0]++
 				w.offset.LineColumn[1] = 0
 
@@ -134,9 +134,10 @@ func (w *TextWriter) write(p []byte, atEOF bool) {
 			// return
 		}
 
-		w.offset.Byte += ByteOffset(graphemeByteCount)
 		w.offset.LineColumn[1]++
 
 		p = p[graphemeByteCount:]
 	}
+
+	w.offset.Byte += ByteOffset(psize)
 }

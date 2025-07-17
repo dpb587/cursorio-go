@@ -3,7 +3,6 @@ package cursorioutil
 import (
 	"bufio"
 	"io"
-	"unicode/utf8"
 
 	"github.com/dpb587/cursorio-go/cursorio"
 )
@@ -12,7 +11,7 @@ type RuneBuffer struct {
 	r io.RuneReader
 	o int64
 
-	buf  []rune
+	buf  cursorio.DecodedRuneList
 	bufi int
 }
 
@@ -31,33 +30,36 @@ func (d *RuneBuffer) GetByteOffset() cursorio.ByteOffset {
 	return cursorio.ByteOffset(d.o)
 }
 
-func (d *RuneBuffer) NextRune() (rune, error) {
+func (d *RuneBuffer) NextRune() (cursorio.DecodedRune, error) {
 	if d.bufi > 0 {
 		r0 := d.buf[0]
 
 		d.buf = d.buf[1:]
 		d.bufi--
 
-		d.o += int64(utf8.RuneLen(r0))
+		d.o += int64(r0.Size)
 
 		return r0, nil
 	}
 
 	r0, r0s, err := d.r.ReadRune()
 	if err != nil {
-		return 0, err
+		return cursorio.DecodedRune{}, err
 	}
 
 	d.o += int64(r0s)
 
-	return r0, nil
+	return cursorio.DecodedRune{
+		Size: r0s,
+		Rune: r0,
+	}, nil
 }
 
-func (d *RuneBuffer) BacktrackRunes(runes ...rune) {
+func (d *RuneBuffer) BacktrackRunes(runes ...cursorio.DecodedRune) {
 	d.buf = append(runes, d.buf...)
 	d.bufi += len(runes)
 
 	for _, r := range runes {
-		d.o -= int64(utf8.RuneLen(r))
+		d.o -= int64(r.Size)
 	}
 }
