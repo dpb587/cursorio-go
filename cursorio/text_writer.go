@@ -1,9 +1,7 @@
 package cursorio
 
 import (
-	"fmt"
 	"io"
-	"os"
 
 	"github.com/apparentlymart/go-textseg/v16/textseg"
 )
@@ -126,12 +124,9 @@ func (w *TextWriter) write(p []byte, psize int, atEOF bool) {
 
 		graphemeByteCount, _, _ = textseg.ScanGraphemeClusters(p, atEOF)
 		if graphemeByteCount == 0 {
-			fmt.Fprintf(os.Stderr, "FATAL: no grapheme cluster found for bytes: %q\n", string(p))
-			panic("no grapheme cluster found") // TODO possible?
+			w.buf = p
 
-			// tc.buf = buf
-
-			// return
+			return
 		}
 
 		w.offset.LineColumn[1]++
