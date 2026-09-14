@@ -1,5 +1,7 @@
 package cursorio
 
+import "unicode/utf8"
+
 type DecodedRune struct {
 	Size int
 	Rune rune
@@ -25,13 +27,19 @@ func (dr DecodedRuneList) String() string {
 		return ""
 	}
 
-	runes := make([]rune, len(dr))
+	byteSize := 0
 
-	for i, r := range dr {
-		runes[i] = r.Rune
+	for _, r := range dr {
+		byteSize += r.Size
 	}
 
-	return string(runes)
+	b := make([]byte, 0, byteSize)
+
+	for _, r := range dr {
+		b = utf8.AppendRune(b, r.Rune)
+	}
+
+	return string(b)
 }
 
 //
